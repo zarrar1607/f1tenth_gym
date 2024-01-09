@@ -33,6 +33,11 @@ from f110_gym.envs.track import Track
 from numba import njit
 from scipy.ndimage import distance_transform_edt as edt
 
+from f110_gym.envs.utils import edt as jedt 
+
+import jax
+import jax.numpy as jnp
+
 
 def get_dt(bitmap, resolution):
     """
@@ -48,6 +53,33 @@ def get_dt(bitmap, resolution):
     """
     dt = resolution * edt(bitmap)
     return dt
+
+
+@jax.jit
+def get_dt_jax(bitmap: jax.Array, resolution: float) -> jax.Array:
+    """
+    Exact Eucliden Distance transformation, returns the distance matrix from the input bitmap.
+    Follows scipy.ndimage.distance_transform_edt
+
+                n
+    y_i = sqrt(sum (x[i]-b[i])**2)
+                i
+
+    where b[i] is the background point (value 0) with the smallest Euclidean distance to input points x[i]
+    n is number of dimensions, default n=2 here.
+
+        Args:
+            bitmap (jax.Array, (n, m)): input binary bitmap of the environment, where 0 is obstacles, and 255 (or anything > 0) is freespace
+            resolution (float): resolution of the input bitmap (m/cell)
+
+        Returns:
+            dt (jax.Array, (n, m)): output distance matrix, where each cell has the corresponding distance (in meters) to the closest obstacle
+    """
+    # convert to binary
+    input = jnp.atleast_1d(jnp.where(bitmap, 1, 0).astype(jnp.int8))
+    # features
+    pass
+
 
 
 @njit(cache=True)
