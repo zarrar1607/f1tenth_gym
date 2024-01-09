@@ -29,8 +29,9 @@ Author: Hongrui Zheng, Renukanandan Tumu
 import warnings
 from enum import Enum
 
-import numpy as np
-from numba import njit
+import numpy as onp
+import jax.numpy as np
+import jax
 
 
 class DynamicModel(Enum):
@@ -77,7 +78,7 @@ class DynamicModel(Enum):
             raise ValueError(f"Unknown model type {self}")
 
 
-@njit(cache=True)
+@jax.jit
 def upper_accel_limit(vel, a_max, v_switch):
     """
     Upper acceleration limit, adjusts the acceleration based on constraints
@@ -98,7 +99,7 @@ def upper_accel_limit(vel, a_max, v_switch):
     return pos_limit
 
 
-@njit(cache=True)
+@jax.jit
 def accl_constraints(vel, a_long_d, v_switch, a_max, v_min, v_max):
     """
     Acceleration constraints, adjusts the acceleration based on constraints
@@ -129,7 +130,7 @@ def accl_constraints(vel, a_long_d, v_switch, a_max, v_min, v_max):
     return a_long
 
 
-@njit(cache=True)
+@jax.jit
 def steering_constraint(
     steering_angle, steering_velocity, s_min, s_max, sv_min, sv_max
 ):
@@ -161,7 +162,7 @@ def steering_constraint(
     return steering_velocity
 
 
-@njit(cache=True)
+@jax.jit
 def vehicle_dynamics_ks(
     x,
     u_init,
@@ -252,7 +253,7 @@ def vehicle_dynamics_ks(
     return f
 
 
-@njit(cache=True)
+@jax.jit
 def vehicle_dynamics_st(
     x,
     u_init,
@@ -400,7 +401,7 @@ def vehicle_dynamics_st(
     return f
 
 
-@njit(cache=True)
+@jax.jit
 def pid_steer(steer, current_steer, max_sv):
     # steering
     steer_diff = steer - current_steer
@@ -412,7 +413,7 @@ def pid_steer(steer, current_steer, max_sv):
     return sv
 
 
-@njit(cache=True)
+@jax.jit
 def pid_accl(speed, current_speed, max_a, max_v, min_v):
     """
     Basic controller for speed/steer -> accl./steer vel.
@@ -451,6 +452,7 @@ def pid_accl(speed, current_speed, max_a, max_v, min_v):
     return accl
 
 
+@jax.jit
 def func_KS(
     x,
     t,
@@ -495,6 +497,7 @@ def func_KS(
     return f
 
 
+@jax.jit
 def func_ST(
     x,
     t,
