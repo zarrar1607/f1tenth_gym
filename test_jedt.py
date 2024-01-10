@@ -3,7 +3,15 @@ from scipy.ndimage import distance_transform_edt as edt
 from f110_gym.envs.track import Track
 import numpy as np
 import jax.numpy as jnp
+from f110_gym.envs.utils import JaxEnum
 
+class Test(JaxEnum):
+    A: 1
+    B: 2
+
+t = Test()
+
+assert False
 track = Track.from_track_name("Spielberg")
 map_img_real = track.occupancy_map
 

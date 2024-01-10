@@ -27,7 +27,10 @@ Original implementation: https://gitlab.lrz.de/tum-cps/commonroad-vehicle-models
 Author: Hongrui Zheng, Renukanandan Tumu
 """
 import warnings
+
+# from f110_gym.envs.utils import JaxEnum as Enum
 from enum import Enum
+from functools import partial
 
 import numpy as onp
 import jax.numpy as np
@@ -63,13 +66,13 @@ class DynamicModel(Enum):
 
         # set initial pose if provided
         if pose is not None:
-            state[0:2] = pose[0:2]
-            state[4] = pose[2]
+            state.at[0:2].set(pose[0:2])
+            state.at[4].set(pose[2])
 
         return state
 
     @property
-    def f_dynamics(self):
+    def _f_dynamics(self):
         if self == DynamicModel.KS:
             return vehicle_dynamics_ks
         elif self == DynamicModel.ST:
@@ -91,10 +94,12 @@ def upper_accel_limit(vel, a_max, v_switch):
         Returns:
             positive_accel_limit (float): adjusted acceleration
     """
-    if vel > v_switch:
-        pos_limit = a_max * (v_switch / vel)
-    else:
-        pos_limit = a_max
+    # if vel > v_switch:
+    #     pos_limit = a_max * (v_switch / vel)
+    # else:
+    #     pos_limit = a_max
+
+    pos_limit = jax.lax.select(vel > v_switch, a_max * (v_switch / vel), a_max)
 
     return pos_limit
 
@@ -130,10 +135,15 @@ def accl_constraints(vel, a_long_d, v_switch, a_max, v_min, v_max):
     return a_long
 
 
-@jax.jit
+@partial(jax.jit, static_argnums=[2, 3, 4, 5])
 def steering_constraint(
-    steering_angle, steering_velocity, s_min, s_max, sv_min, sv_max
-):
+    steering_angle: float,
+    steering_velocity: float,
+    s_min: float,
+    s_max: float,
+    sv_min: float,
+    sv_max: float,
+) -> float:
     """
     Steering constraints, adjusts the steering velocity based on constraints
 
@@ -150,14 +160,25 @@ def steering_constraint(
     """
 
     # constraint steering velocity
-    if (steering_angle <= s_min and steering_velocity <= 0) or (
-        steering_angle >= s_max and steering_velocity >= 0
-    ):
-        steering_velocity = 0.0
-    elif steering_velocity <= sv_min:
-        steering_velocity = sv_min
-    elif steering_velocity >= sv_max:
-        steering_velocity = sv_max
+    # if (steering_angle <= s_min and steering_velocity <= 0) or (
+    #     steering_angle >= s_max and steering_velocity >= 0
+    # ):
+    #     steering_velocity = 0.0
+    # elif steering_velocity <= sv_min:
+    #     steering_velocity = sv_min
+    # elif steering_velocity >= sv_max:
+    #     steering_velocity = sv_max
+
+    steering_velocity = jax.lax.select(
+        (steering_angle <= s_min and steering_velocity <= 0)
+        or (steering_angle >= s_max and steering_velocity >= 0),
+        0.0,
+        jax.lax.select(
+            steering_velocity <= sv_min,
+            sv_min,
+            jax.lax.select(steering_velocity >= sv_max, sv_max, steering_velocity),
+        ),
+    )
 
     return steering_velocity
 
