@@ -21,6 +21,7 @@ setup(
         "shapely",
         "opencv-python",
         "jax[cpu]",
+        "chex",
     ],
     extras_require={
         "dev": [

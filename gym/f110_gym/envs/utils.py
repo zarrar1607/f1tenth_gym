@@ -1,12 +1,66 @@
+from __future__ import annotations
 import jax
 import jax.numpy as jnp
 import numpy as np
 from functools import partial
+from chex import dataclass
+from enum import _EnumDict, Enum, EnumMeta
 
 # types
 from typing import Any, Dict, TypeVar
 
 KeyType = TypeVar("KeyType")
+
+
+# JAX compatible Enum
+# based on https://github.com/epignatelli/jax_enums
+@dataclass
+class EnumItem:
+    name: str
+    value: jax.Array
+    obj_class: str
+
+    def __str__(self):
+        return f"<{self.obj_class}.{self.name}: {self.value}> as PyTreeNode"
+    
+    def __repr__(self):
+        return str(self)
+    
+    def __hash__(self):
+        return hash(tuple(jax.tree_util.tree_leaves(self)))
+    
+    def __getitem__(self, idx):
+        return jax.tree_util.tree_map(lambda x: x[idx], self)
+    
+    def __eq__(self, other):
+        if not isinstance(other, EnumItem):
+            raise TypeError(
+                f"Can't compare with non-EnumItem {other}."
+            )
+        with jax.ensure_compile_time_eval():
+            return jnp.array_equal(self.value, other.value)
+        
+    def __ne__(self, other):
+        return jnp.logical_not(self.__eq__(other))
+    
+    def tree_flatten(self):
+        return (self.value), (self.name, self.obj_class)
+    
+    @classmethod
+    def tree_unflatten(cls, aux, children) -> EnumItem:
+        return cls(value=children[0], name=aux[0], obj_class=aux[1])
+    
+
+class JaxEnumMeta(EnumMeta):
+    def __new__(mcls, attr_name, bases, attrs, **kwargs):
+        return super().__new__(cls, bases, classdict, **kwds)
+    
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        return super().__setattr__(__name, __value)
+    
+
+class JaxEnum(Enum, metaclass=JaxEnumMeta):
+    ...
 
 
 def deep_update(
