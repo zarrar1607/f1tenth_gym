@@ -26,6 +26,13 @@ Author: Hongrui Zheng
 
 # gym imports
 import gymnasium as gym
+from gymnax.environments import environment, spaces
+
+# jax
+import jax
+import jax.numpy as jnp
+import chex
+from flax import struct
 
 from f110_gym.envs.action import (CarAction,
                                   from_single_to_multi_action_space)
@@ -46,7 +53,7 @@ from f110_gym.envs.utils import deep_update
 import numpy as np
 
 
-class F110Env(gym.Env):
+class F110Env(environment.Environment):
     """
     OpenAI gym environment for F1TENTH
 

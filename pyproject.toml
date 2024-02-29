@@ -45,6 +45,8 @@ opencv-python = "^4.9.0.80"
 yamldataclassconfig = "^1.5.0"
 requests = "^2.31.0"
 shapely = "^2.0.2"
+jax = {extras = ["cuda12"], version = "^0.4.25"}
+gymnax = "^0.0.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.4"
@@ -55,6 +57,12 @@ autoflake = "^2.2.1"
 matplotlib = "^3.8.2"
 flake8 = "^7.0.0"
 
+
+
+[[tool.poetry.source]]
+name = "jorenham/jax_pep503"
+url = "https://jorenham.github.io/jax_pep503/"
+priority = "supplemental"
 
 [build-system]
 requires = ["poetry-core"]
