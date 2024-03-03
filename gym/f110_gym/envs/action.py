@@ -1,14 +1,15 @@
 from abc import abstractmethod
-from enum import Enum
+from enum import IntEnum
 from typing import Any, Dict, Tuple
 
 import warnings
 import gymnasium as gym
 import numpy as np
+import jax.numpy as jnp
 from f110_gym.envs.dynamic_models import pid_steer, pid_accl
 
 
-class LongitudinalActionEnum(Enum):
+class LongitudinalActionEnum(IntEnum):
     Accl = 1
     Speed = 2
 
