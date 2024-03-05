@@ -4,10 +4,11 @@ import yaml
 import gym
 import numpy as np
 from argparse import Namespace
-
+import scipy
 from numba import njit
 
 from pyglet.gl import GL_POINTS
+import matplotlib.pyplot as plt
 
 import tensorflow as tf
 
@@ -241,11 +242,10 @@ class FlippyPlanner:
 
 class TinyLidarNet:
     def __init__(self):
-        #model = tf.keras.models.load_model(model_name+'.h5')
-        self.interpreter = tf.lite.Interpreter(model_path='models/f1_tenth_model_diff_main_noquantized.tflite')
+        self.interpreter = tf.lite.Interpreter(model_path='models/f1_tenth_model_diff_2xS_noquantized.tflite')
         self.interpreter.allocate_tensors()
         self.input_index = self.interpreter.get_input_details()[0]["index"]
-        self.output_details = self.interpreter.get_output_details()#[0]["index"]
+        self.output_details = self.interpreter.get_output_details()
 
     def linear_map(self, x, x_min, x_max, y_min, y_max):
         return (x - x_min) / (x_max - x_min) * (y_max - y_min) + y_min
@@ -253,12 +253,17 @@ class TinyLidarNet:
     def render_waypoints(self, *args, **kwargs):
         pass
         
-    def plan(self, scans):
+    def plan(self, scans, speed =0):
+
         noise = np.random.normal(0, 0.5, scans.shape)
         scans = scans + noise
+        scans[scans>10] = 10
+        #scans = scans[::2]
         scans = np.expand_dims(scans, axis=-1).astype(np.float32)
         scans = np.expand_dims(scans, axis=0)
         self.interpreter.set_tensor(self.input_index, scans)
+        
+
         start_time = time.time()
         self.interpreter.invoke()
         inf_time = time.time() - start_time
@@ -267,7 +272,7 @@ class TinyLidarNet:
 
         steer = output[0,0]
         speed = output[0,1]
-        speed = self.linear_map(speed, 0, 1, 1.5, 5.0)
+        speed = self.linear_map(speed, 0, 1, -.1, 5.0)
         #print(f'steer: {steer}, Speed: {speed}')
         return speed, steer
 
@@ -311,17 +316,40 @@ def main():
     obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
     env.render()
 
+    speeds = []
+    laptimes = []
     laptime = 0.0
     start = time.time()
 
+    speed = 0
+    # Assume starting position [0, 0]
+    start_position = [0, 0]
+    total_distance = 0.0
     while not done:
         # speed, steer = planner.plan(obs['poses_x'][0], obs['poses_y'][0], obs['poses_theta'][0], work['tlad'], work['vgain'])
-        speed, steer = planner.plan(obs['scans'][0])
+        speed, steer = planner.plan(obs['scans'][0],speed)
         obs, step_reward, done, info = env.step(np.array([[steer, speed]]))
         laptime += step_reward
         env.render(mode='human')
+        current_position = [obs['poses_x'][0], obs['poses_y'][0]]
+        total_distance += np.linalg.norm(np.array(current_position) - np.array(start_position))
+        start_position = current_position
+        speeds.append(speed)
+        laptimes.append(laptime)
+        print(f"x: {obs['poses_x'][0]}, y: {obs['poses_y'][0]}")
+        print(f"Total Distance Traveled: {total_distance:.2f}")
+        print(f'Sim elapsed time: {laptime:.2f}')
+        print(f'Speed: {speed:.2f}')
         
-    print('Sim elapsed time:', laptime, 'Real elapsed time:', time.time()-start)
-
+    print(f'Total Distance Traveled: {total_distance:.2f}, Sim elapsed time: {laptime:.2f}, Speed: {total_distance/laptime:.2f}, Real elapsed time: {time.time()-start:.2f}')
+    # Plotting the speed graph
+    # plt.figure()
+    # plt.plot(laptimes, speeds, label='Speed')
+    # plt.xlabel('Elapsed Time (s)')
+    # plt.ylabel('Speed')
+    # plt.title('Speed over Simulation Time')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
 if __name__ == '__main__':
     main()

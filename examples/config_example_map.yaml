@@ -4,36 +4,42 @@ run_name: 'map_wide'
 perf_num: 6
 
 # map paths
-#map_path: './example_map'
-map_path: './f1tenth_racetracks/Montreal/Montreal_map'
+map_path: './example_map'
+map_path: './f1tenth_racetracks/MoscowRaceway/MoscowRaceway_map'
+#map_path: './f1tenth_racetracks/Austin/Austin_map'
 #map_path: './CPSWeekTrack'
 map_ext: '.png'
 
 # starting pose for map
 #example
-sx: 0.7
-sy: 1.
-stheta: 3.7079632679
+#sx: 30.0
+#sy: 17.0
+sx: 0
+sy: 0
+# sx: -54.0
+# sy: -16.0
 #Austin, MexicoCity, Monza, MoscowRaceway, Nuerburgring
-stheta: -1.6
+stheta: -2.
 #BrandsHatch, Catalunya
-#stheta: 3.7079632679
+#stheta: 0.7079632679
 #Hockenheim
-#stheta: -1.7079632679
+# stheta: -1.7079632679
 #IMS, Melbourne
 #stheta: -0.7079632679
 #Montreal
-sx: 0.65
-sy: -1.5
-stheta: -1.7079632679
+# sx: 0.65
+# sy: -1.5
+# stheta: -1.7079632679
 #cps
 # sx: 0.7
 # sy: -3.0
 # stheta: 3.7079632679
+#Sochi
 
 
 # raceline path and indices
 wpt_path: './example_waypoints.csv'
+wpt_path: './f1tenth_racetracks/MoscowRaceway/MoscowRaceway_raceline.csv'
 wpt_delim: ';'
 wpt_rowskip: 3
 wpt_xind: 1
