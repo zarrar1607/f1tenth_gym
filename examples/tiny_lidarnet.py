@@ -242,7 +242,7 @@ class FlippyPlanner:
 
 class TinyLidarNet:
     def __init__(self):
-        self.interpreter = tf.lite.Interpreter(model_path='models/f1_tenth_model_diff_2xS_noquantized.tflite')
+        self.interpreter = tf.lite.Interpreter(model_path='models/f1_tenth_model_diff_main_noquantized.tflite')
         self.interpreter.allocate_tensors()
         self.input_index = self.interpreter.get_input_details()[0]["index"]
         self.output_details = self.interpreter.get_output_details()
@@ -258,7 +258,7 @@ class TinyLidarNet:
         noise = np.random.normal(0, 0.5, scans.shape)
         scans = scans + noise
         scans[scans>10] = 10
-        #scans = scans[::2]
+        #scans = scans[::4]
         scans = np.expand_dims(scans, axis=-1).astype(np.float32)
         scans = np.expand_dims(scans, axis=0)
         self.interpreter.set_tensor(self.input_index, scans)
@@ -272,7 +272,8 @@ class TinyLidarNet:
 
         steer = output[0,0]
         speed = output[0,1]
-        speed = self.linear_map(speed, 0, 1, -.1, 5.0)
+        #speed = self.linear_map(speed, 0, 1, -1., 8.) #Austin
+        speed = self.linear_map(speed, 0, 1, -1., 7.0) #YasMarina
         #print(f'steer: {steer}, Speed: {speed}')
         return speed, steer
 

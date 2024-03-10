@@ -6,7 +6,8 @@ perf_num: 6
 # map paths
 map_path: './example_map'
 map_path: './f1tenth_racetracks/MoscowRaceway/MoscowRaceway_map'
-#map_path: './f1tenth_racetracks/Austin/Austin_map'
+map_path: './f1tenth_racetracks/Austin/Austin_map'
+map_path: './f1tenth_racetracks/YasMarina/YasMarina_map'
 #map_path: './CPSWeekTrack'
 map_ext: '.png'
 
@@ -19,7 +20,7 @@ sy: 0
 # sx: -54.0
 # sy: -16.0
 #Austin, MexicoCity, Monza, MoscowRaceway, Nuerburgring
-stheta: -2.
+stheta: 2.5
 #BrandsHatch, Catalunya
 #stheta: 0.7079632679
 #Hockenheim
